@@ -41,7 +41,6 @@ HX_FLAGS += -DPOSIX \
 	-D_vsnprintf=vsnprintf \
 	-D_alloca=alloca \
 	-Dstrcmpi=strcasecmp \
-	-DCOMPILER_GCC \
 	-Wno-overloaded-virtual \
 	-Wall \
 	-Werror \
@@ -59,10 +58,11 @@ HX_FLAGS += -DPOSIX \
 	-mfpmath=sse \
 	-fvisibility=hidden \
 	-Wno-non-virtual-dtor \
+	-Wno-overloaded-virtual \
+	-Wno-deprecated-register \
 	-fno-exceptions \
 	-fno-rtti \
-	-fvisibility-inlines-hidden \
-	-std=c++11
+	-fvisibility-inlines-hidden
 
 #
 HX_LIB = Release/l4dtoolz_mm.o \
@@ -77,8 +77,8 @@ all:
 	ln -sf $(HX_SDK)/lib/linux/libvstdlib_srv.so libvstdlib_srv.so;
 	ln -sf $(HX_SDK)/lib/linux/libtier0_srv.so libtier0_srv.so;
 #
-	gcc $(HX_INCLUDE) $(HX_FLAGS) -o Release/l4dtoolz_mm.o -c l4dtoolz_mm.cpp
-	gcc $(HX_INCLUDE) $(HX_FLAGS) -o Release/signature.o -c signature.cpp
-	gcc $(HX_INCLUDE) $(HX_LIB) -m32 -shared -static-libgcc -ldl -lm -o Release/l4dtoolz_mm_i486.so
+	clang $(HX_INCLUDE) $(HX_FLAGS) -o Release/l4dtoolz_mm.o -c l4dtoolz_mm.cpp
+	clang $(HX_INCLUDE) $(HX_FLAGS) -o Release/signature.o -c signature.cpp
+	clang $(HX_INCLUDE) $(HX_LIB) -m32 -shared -static-libgcc -ldl -lm -o Release/l4dtoolz_mm_i486.so
 #
 	rm -rf Release/*.o
