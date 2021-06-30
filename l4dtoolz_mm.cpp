@@ -99,7 +99,7 @@ void l4dtoolz::OnChangeUnreserved ( IConVar *var, const char *pOldValue, float f
 	if(new_value != old_value) {
 		if(new_value == 1) {
 			write_signature(unreserved_ptr, unreserved_new);
-			engine->ServerCommand("sv_allow_lobby_connect_only 0");
+			engine->ServerCommand("sv_allow_lobby_connect_only 0\n");
 		} else {
 			write_signature(unreserved_ptr, unreserved_org);
 		}
@@ -160,7 +160,7 @@ bool l4dtoolz::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 		if(tmp_player) {
 			get_original_signature(tmp_player, players_new, players_org);
 			write_signature(tmp_player, players_new);
-			engine->ServerCommand("maxplayers 32");
+			engine->ServerCommand("maxplayers 32\n");
 			engine->ServerExecute();
 			write_signature(tmp_player, players_org);
 			free(players_org);
