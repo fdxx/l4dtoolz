@@ -3,7 +3,7 @@
 HX_SDK = ../hl2sdk-l4d
 HX_METAMOD = ../mmsource
 #
-# l4dtoolz_mm_i486.so
+# l4dtoolz_mm.so
 #
 HX_INCLUDE = -I. \
 	-I$(HX_METAMOD)/core \
@@ -78,6 +78,6 @@ all:
 #
 	clang $(HX_INCLUDE) $(HX_FLAGS) -o Release/l4dtoolz_mm.o -c l4dtoolz_mm.cpp
 	clang $(HX_INCLUDE) $(HX_FLAGS) -o Release/signature.o -c signature.cpp
-	clang $(HX_INCLUDE) $(HX_LIB) -m32 -shared -static-libgcc -ldl -lm -o Release/l4dtoolz_mm_i486.so
+	clang $(HX_INCLUDE) $(HX_LIB) -m32 -shared -static-libgcc -ldl -lm -o Release/l4dtoolz_mm.so
 #
 	rm -rf Release/*.o
