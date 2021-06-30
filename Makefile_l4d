@@ -15,8 +15,7 @@ HX_INCLUDE = -I. \
 	-I$(HX_SDK)/public/mathlib
 
 #
-HX_FLAGS = -DSOURCE_ENGINE=8 \
-	-DL4D1
+HX_FLAGS = -DSOURCE_ENGINE=8
 
 #
 HX_FLAGS += -DSE_EPISODEONE=1 \

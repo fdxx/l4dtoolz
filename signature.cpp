@@ -12,7 +12,7 @@
 #include <link.h>
 #endif
 
-#define SIGN_HEADER_LEN		2
+#define SIGN_HEADER_LEN	2
 #define SIGN_LEN_BYTE		0
 #define SIGN_OFFSET_BYTE	1
 
@@ -121,7 +121,6 @@ static int callback(struct dl_phdr_info *info, size_t size, void *data)
 int find_base(const char* name, struct base_addr_t *base_addr)
 {
 #ifdef WIN32
-/*	HANDLE hModuleSnap = INVALID_HANDLE_VALUE; */
 	MODULEENTRY32 modent;
 	HANDLE hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
 	if(hModuleSnap == INVALID_HANDLE_VALUE) {
@@ -196,12 +195,11 @@ int write_signature(const void* addr, const void* signature)
 	WriteProcessMemory(h_process, (void *)(u_addr+sign_off), (void *)(u_addr_sign+SIGN_HEADER_LEN), sign_len, NULL);
 	CloseHandle(h_process);
 #else
-
 	lock_region(addr, sign_len, sign_off, 1);
 	memcpy((void *)(u_addr+sign_off), (void *)(u_addr_sign+SIGN_HEADER_LEN), sign_len);
 	lock_region(addr, sign_len, sign_off, 0);
-
 #endif
+
 	return 1;
 }
 
@@ -226,6 +224,7 @@ int read_signature(const void *addr, void *signature)
 	memcpy((void *)(u_addr_sign+SIGN_HEADER_LEN), (void *)(u_addr+sign_off), sign_len);
 	lock_region(addr, sign_len, sign_off, 0);
 #endif
+
 	return 0;
 }
 
