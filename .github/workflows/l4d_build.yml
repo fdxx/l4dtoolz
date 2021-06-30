@@ -103,10 +103,10 @@ jobs:
       - name: Checking out own repository
         uses: actions/checkout@v2
         with:
-          path: Tickrate-Enabler
+          path: l4dtoolz
 
-      - name: Compiling Tickrate-Enabler files
-        working-directory: Tickrate-Enabler
+      - name: Compiling L4DToolZ files
+        working-directory: l4dtoolz
         run: |
           mkdir build
           cd build
@@ -116,5 +116,5 @@ jobs:
       - name: Uploading package
         uses: actions/upload-artifact@v2
         with:
-          name: Tickrate-Enabler-l4d-${{ env.GITHUB_SHA_SHORT }}
-          path: Tickrate-Enabler/build/package
+          name: L4DToolZ-l4d-${{ env.GITHUB_SHA_SHORT }}
+          path: l4dtoolz/build/package
