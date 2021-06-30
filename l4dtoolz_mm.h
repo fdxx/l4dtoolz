@@ -23,7 +23,6 @@ public:
 
 	static void OnChangeMaxplayers ( IConVar *var, const char *pOldValue, float flOldValue );
 	static void OnChangeUnreserved ( IConVar *var, const char *pOldValue, float flOldValue );
-	static void OnChangeIvailosp ( IConVar *var, const char *pOldValue, float flOldValue );
 
 #if SOURCE_ENGINE == SE_LEFT4DEAD
 	static void OnChangeRemovehumanlimit ( IConVar *var, const char *pOldValue, float flOldValue );

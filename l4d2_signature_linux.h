@@ -30,3 +30,4 @@ unsigned char lobby_match_new[] = {0x01, 0x02, 0xC3};
 void *lobby_match_org = NULL;
 
 #endif //_INCLUDE_L4D2_SIGNATURE_LINUX_
+
