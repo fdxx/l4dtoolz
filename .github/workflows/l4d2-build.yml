@@ -93,7 +93,7 @@ jobs:
         working-directory: ambuild
         run: python setup.py install
 
-      - name: Checking out hl2sdk-l4d
+      - name: Checking out hl2sdk-l4d2
         uses: actions/checkout@v2
         with:
           repository: alliedmodders/hl2sdk
