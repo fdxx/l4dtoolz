@@ -18,7 +18,7 @@ void* l4dtoolz::tmp_player = NULL;
 void* l4dtoolz::unreserved_ptr = NULL;
 void* l4dtoolz::lobby_match_ptr = NULL;
 
-ConVar sv_maxplayers("sv_maxplayers", "-1", 0, "Max Human Players", true, -1, true, 32, l4dtoolz::OnChangeMaxplayers);
+ConVar sv_maxplayers("sv_maxplayers", "-1", 0, "Max Human Players", true, -1, true, 31, l4dtoolz::OnChangeMaxplayers);
 #if SOURCE_ENGINE == SE_LEFT4DEAD
 ConVar sv_removehumanlimit("sv_removehumanlimit", "0", 0, "Remove Human limit reached kick", true, 0, true, 1, l4dtoolz::OnChangeRemovehumanlimit);
 #endif
@@ -160,7 +160,7 @@ bool l4dtoolz::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 		if(tmp_player) {
 			get_original_signature(tmp_player, players_new, players_org);
 			write_signature(tmp_player, players_new);
-			engine->ServerCommand("maxplayers 32\n");
+			engine->ServerCommand("maxplayers 31\n");
 			engine->ServerExecute();
 			write_signature(tmp_player, players_org);
 			free(players_org);
@@ -225,7 +225,7 @@ const char *l4dtoolz::GetLicense()
 
 const char *l4dtoolz::GetVersion()
 {
-	return "1.1.0.0";
+	return "1.1.0.1";
 }
 
 const char *l4dtoolz::GetDate()
