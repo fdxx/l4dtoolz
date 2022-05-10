@@ -38,6 +38,8 @@ public:
 	static void* lobby_match_ptr;
 };
 
+size_t UTIL_Format(char *buffer, size_t maxlength, const char *fmt, ...);
+
 extern l4dtoolz g_l4dtoolz;
 
 PLUGIN_GLOBALVARS();

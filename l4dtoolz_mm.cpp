@@ -160,7 +160,14 @@ bool l4dtoolz::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool
 		if(tmp_player) {
 			get_original_signature(tmp_player, players_new, players_org);
 			write_signature(tmp_player, players_new);
-			engine->ServerCommand("maxplayers 31\n");
+			const char *pszCmdLineMax;
+			if(CommandLine()->CheckParm("-maxplayers", &pszCmdLineMax) || CommandLine()->CheckParm("+maxplayers", &pszCmdLineMax)) {
+				char command[32];
+				UTIL_Format(command, sizeof(command), "maxplayers %d\n", clamp(atoi(pszCmdLineMax), 1, 32));
+				engine->ServerCommand(command);
+			} else {
+				engine->ServerCommand("maxplayers 31\n");
+			}
 			engine->ServerExecute();
 			write_signature(tmp_player, players_org);
 			free(players_org);
@@ -218,6 +225,23 @@ bool l4dtoolz::Unload(char *error, size_t maxlen)
 	return true;
 }
 
+size_t UTIL_Format(char *buffer, size_t maxlength, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	size_t len = vsnprintf(buffer, maxlength, fmt, ap);
+	va_end(ap);
+
+	if (len >= maxlength)
+	{
+		len = maxlength - 1;
+		buffer[len] = '\0';
+	}
+
+	return len;
+}
+
 const char *l4dtoolz::GetLicense()
 {
 	return "GPLv3";
@@ -225,7 +249,7 @@ const char *l4dtoolz::GetLicense()
 
 const char *l4dtoolz::GetVersion()
 {
-	return "1.1.0.1";
+	return "1.1.0.2";
 }
 
 const char *l4dtoolz::GetDate()
