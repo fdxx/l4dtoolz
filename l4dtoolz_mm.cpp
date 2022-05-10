@@ -1,6 +1,7 @@
 #include "l4dtoolz_mm.h"
 #include "signature.h"
 #include "game_signature.h"
+#include "icommandline.h"
 
 l4dtoolz g_l4dtoolz;
 IVEngineServer* engine = NULL;
@@ -18,7 +19,7 @@ void* l4dtoolz::tmp_player = NULL;
 void* l4dtoolz::unreserved_ptr = NULL;
 void* l4dtoolz::lobby_match_ptr = NULL;
 
-ConVar sv_maxplayers("sv_maxplayers", "-1", 0, "Max Human Players", true, -1, true, 31, l4dtoolz::OnChangeMaxplayers);
+ConVar sv_maxplayers("sv_maxplayers", "-1", 0, "Max Human Players", true, -1, true, 32, l4dtoolz::OnChangeMaxplayers);
 #if SOURCE_ENGINE == SE_LEFT4DEAD
 ConVar sv_removehumanlimit("sv_removehumanlimit", "0", 0, "Remove Human limit reached kick", true, 0, true, 1, l4dtoolz::OnChangeRemovehumanlimit);
 #endif
