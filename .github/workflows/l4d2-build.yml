@@ -26,11 +26,11 @@ jobs:
           - windows-latest
 
         mm_version:
-          - "1.10"
+          - "master"
 
         include:
-          - mm_version: "1.10"
-            mm_branch: "1.10-dev"
+          - mm_version: "master"
+            mm_branch: "master"
 
           - os: ubuntu-latest
             os_short: linux
