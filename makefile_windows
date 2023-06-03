@@ -1,0 +1,48 @@
+HX_HL2SDK = ..\hl2sdk-l4d2
+
+HX_INCLUDE = /I. \
+	/I$(HX_HL2SDK)\public \
+	/I$(HX_HL2SDK)\public\tier0 \
+	/I$(HX_HL2SDK)\public\tier1 \
+	/I$(HX_HL2SDK)\public\engine \
+	/I$(HX_HL2SDK)\public\mathlib
+
+HX_FLAGS = /DSOURCE_ENGINE=9 \
+	/DSE_EPISODEONE=1 \
+	/DSE_DARKMESSIAH=2 \
+	/DSE_ORANGEBOX=3 \
+	/DSE_BLOODYGOODTIME=4 \
+	/DSE_EYE=5 \
+	/DSE_CSS=6 \
+	/DSE_ORANGEBOXVALVE=7 \
+	/DSE_LEFT4DEAD=8 \
+	/DSE_LEFT4DEAD2=9 \
+	/DSE_ALIENSWARM=10 \
+	/DSE_PORTAL2=11 \
+	/DSE_CSGO=12 \
+	/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE /D_ITERATOR_DEBUG_LEVEL=0 /DNDEBUG /DWIN32 /D_WINDOWS \
+	/DCOMPILER_MSVC /DCOMPILER_MSVC32 \
+	/MT /W3 /Ox /Oy- /EHsc /GR- /TP /nologo
+
+HX_LIB = \
+	kernel32.lib \
+	legacy_stdio_definitions.lib \
+	$(HX_HL2SDK)\lib\public\tier0.lib \
+	$(HX_HL2SDK)\lib\public\tier1.lib \
+	$(HX_HL2SDK)\lib\public\vstdlib.lib
+
+
+all:
+	if not exist build mkdir build
+	if not exist release\addons\l4dtoolz mkdir release\addons\l4dtoolz
+	
+	cl $(HX_INCLUDE) $(HX_FLAGS) /c l4dtoolz.cpp /Fobuild\l4dtoolz.obj
+	cl $(HX_INCLUDE) $(HX_FLAGS) /c memoryutils.cpp /Fobuild\memoryutils.obj
+	cl build\l4dtoolz.obj build\memoryutils.obj /link /MACHINE:X86 /OPT:ICF /OPT:REF /nologo /DLL $(HX_LIB) /OUT:build\l4dtoolz.dll
+	
+	copy /y build\l4dtoolz.dll release\addons\l4dtoolz
+	copy /y l4dtoolz.txt release\addons\l4dtoolz
+	copy /y l4dtoolz.vdf release\addons
+	
+	del /s /q build
+	rmdir build

@@ -1,0 +1,86 @@
+name: build
+
+on:
+  pull_request:
+    paths-ignore:
+      - LICENSE
+      - README.md
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: build for linux
+    runs-on: ubuntu-20.04
+     
+    steps:
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Install (Linux)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y clang g++-multilib make
+          
+      - name: Getting hl2sdk-l4d2
+        uses: actions/checkout@v3
+        with:
+          repository: alliedmodders/hl2sdk
+          ref: l4d2
+          path: hl2sdk-l4d2
+
+      - name: Getting own repository
+        uses: actions/checkout@v3
+        with:
+          path: src
+          
+      - name: Compiling ${{ github.event.repository.name }} files
+        shell: bash
+        working-directory: src
+        run: make -f makefile_linux all
+          
+      - name: Uploading package
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.repository.name }}-l4d2-linux-${{ env.GITHUB_SHA_SHORT }}
+          path: src/release
+
+  windows:
+    name: build for windows
+    runs-on: windows-2019
+     
+    steps:
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Getting hl2sdk-l4d2
+        uses: actions/checkout@v3
+        with:
+          repository: alliedmodders/hl2sdk
+          ref: l4d2
+          path: hl2sdk-l4d2
+
+      - name: Getting own repository
+        uses: actions/checkout@v3
+        with:
+          path: src
+      
+      - name: Set MSVC Environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+
+      - name: Compiling ${{ github.event.repository.name }} files
+        working-directory: src
+        run: nmake -f makefile_windows all
+          
+      - name: Uploading package
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.event.repository.name }}-l4d2-windows-${{ env.GITHUB_SHA_SHORT }}
+          path: src/release
+          
