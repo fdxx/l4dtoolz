@@ -41,7 +41,7 @@ int GameConfig::GetOffset(const char *key)
 	if (!this->kv) return -1;
 
 	char buffer[512];
-	sprintf(buffer, "%s/Offsets/%s/%s", game, key, platform);
+	snprintf(buffer, sizeof(buffer)-1, "%s/Offsets/%s/%s", game, key, platform);
 	KeyValues *pOffsetSubKey = this->kv->FindKey(buffer);
 	if (!pOffsetSubKey)
 		return -1;
@@ -59,7 +59,7 @@ void* GameConfig::GetAddress(const char *key)
 	if (!this->kv) return NULL;
 
 	char buffer[512];
-	sprintf(buffer, "%s/Addresses/%s/%s", game, key, platform);
+	snprintf(buffer, sizeof(buffer)-1, "%s/Addresses/%s/%s", game, key, platform);
 	KeyValues *pAddrSubKey = this->kv->FindKey(buffer);
 	if (!pAddrSubKey)
 		return NULL;
@@ -97,7 +97,7 @@ void* GameConfig::GetMemSig(const char *key)
 	if (!this->kv) return NULL;
 
 	char buffer[512];
-	sprintf(buffer, "%s/Signatures/%s", game, key);
+	snprintf(buffer, sizeof(buffer)-1, "%s/Signatures/%s", game, key);
 	KeyValues *pSignSubKey = this->kv->FindKey(buffer);
 	if (!pSignSubKey)
 		return NULL;
@@ -109,7 +109,7 @@ void* GameConfig::GetMemSig(const char *key)
 		return NULL;
 
 	DynLibInfo libInfo;
-	snprintf(libInfo.name, sizeof(libInfo.name), "%s%s", library, libSuffix);
+	snprintf(libInfo.name, sizeof(libInfo.name)-1, "%s%s", library, libSuffix);
 
 	if (GetLibInfo(&libInfo))
 	{
@@ -130,7 +130,7 @@ bool MemoryPatch::CreateFromConf(GameConfig *gameconf, const char *key)
 		return false;
 
 	char buffer[512];
-	sprintf(buffer, "%s/MemPatches/%s/%s", game, key, platform);
+	snprintf(buffer, sizeof(buffer)-1, "%s/MemPatches/%s/%s", game, key, platform);
 	KeyValues *pMemPatchSubKey = gameconf->kv->FindKey(buffer);
 	if (!pMemPatchSubKey)
 		return false;
