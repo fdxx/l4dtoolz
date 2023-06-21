@@ -39,3 +39,9 @@ cd l4dtoolz
 nmake -f makefile_windows all
 ## Check the l4dtoolz/release folder.
 ```
+## Credits
+
+- Original `l4dtoolz` plugin and other forked versions
+- Original `tickrate_enabler` plugin and other forked versions
+- [AlliedModders](https://github.com/alliedmodders)
+- [SourceScramble](https://github.com/nosoop/SMExt-SourceScramble)

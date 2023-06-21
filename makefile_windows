@@ -10,7 +10,7 @@ HX_INCLUDE = /I. \
 HX_FLAGS = \
 	/D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE /D_ITERATOR_DEBUG_LEVEL=0 /DNDEBUG /DWIN32 /D_WINDOWS /D_WIN32 \
 	/DCOMPILER_MSVC /DCOMPILER_MSVC32 \
-	/MT /W3 /Ox /Oy- /EHsc /GR- /TP /nologo
+	/std:c++14 /MT /W3 /Ox /Oy- /EHsc /GR- /TP /nologo
 
 HX_LIB = \
 	kernel32.lib \
@@ -34,3 +34,12 @@ all:
 	
 	del /s /q build
 	rmdir build
+
+
+debug:
+	if not exist build mkdir build
+
+	cl $(HX_INCLUDE) $(HX_FLAGS) /c l4dtoolz.cpp /Fobuild\l4dtoolz.obj
+	cl $(HX_INCLUDE) $(HX_FLAGS) /c memoryutils.cpp /Fobuild\memoryutils.obj
+	cl build\l4dtoolz.obj build\memoryutils.obj /link /MACHINE:X86 /OPT:ICF /OPT:REF /nologo /DLL $(HX_LIB) /OUT:build\l4dtoolz.dll /DEBUG:FULL
+	

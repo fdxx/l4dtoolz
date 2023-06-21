@@ -13,36 +13,34 @@
 	#define SH_LALDIF(x) ((uintptr_t)(x) % PAGESIZE)
 #endif
 
-#if SOURCE_ENGINE == SE_LEFT4DEAD2
-	static const char *game = "left4dead2";
-#endif
+static const char *game = "left4dead2";
 
 //memory addresses below 0x10000 are automatically considered invalid for dereferencing
 #define VALID_MINIMUM_MEMORY_ADDRESS 0x10000
 
 bool GameConfig::LoadFile(IBaseFileSystem *filesystem, const char *file, const char *pathID)
 {
-	this->kv = new KeyValues("");
-	if (this->kv->LoadFromFile(filesystem, file, pathID))
+	m_pkv = new KeyValues("");
+	if (m_pkv->LoadFromFile(filesystem, file, pathID))
 		return true;
 	
-	this->kv->deleteThis();
-	this->kv = NULL;
+	m_pkv->deleteThis();
+	m_pkv = nullptr;
 	return false;
 }
 
 GameConfig::~GameConfig()
 {
-	this->kv->deleteThis();
+	m_pkv->deleteThis();
 }
 
 int GameConfig::GetOffset(const char *key)
 {
-	if (!this->kv) return -1;
+	if (!m_pkv) return -1;
 
 	char buffer[512];
 	snprintf(buffer, sizeof(buffer), "%s/Offsets/%s/%s", game, key, platform);
-	KeyValues *pOffsetSubKey = this->kv->FindKey(buffer);
+	KeyValues *pOffsetSubKey = m_pkv->FindKey(buffer);
 	if (!pOffsetSubKey)
 		return -1;
 
@@ -56,21 +54,21 @@ int GameConfig::GetOffset(const char *key)
 
 void* GameConfig::GetAddress(const char *key)
 {
-	if (!this->kv) return NULL;
+	if (!m_pkv) return nullptr;
 
 	char buffer[512];
 	snprintf(buffer, sizeof(buffer), "%s/Addresses/%s/%s", game, key, platform);
-	KeyValues *pAddrSubKey = this->kv->FindKey(buffer);
+	KeyValues *pAddrSubKey = m_pkv->FindKey(buffer);
 	if (!pAddrSubKey)
-		return NULL;
+		return nullptr;
 	
 	const char *signKey = pAddrSubKey->GetString("signature");
 	if (!signKey[0])
-		return NULL;
+		return nullptr;
 
-	void *addr = this->GetMemSig(signKey);
+	void *addr = GetMemSig(signKey);
 	if (!addr)
-		return NULL;
+		return nullptr;
 
 	for (KeyValues *pSub = pAddrSubKey->GetFirstValue(); pSub; pSub = pSub->GetNextValue())
 	{
@@ -87,38 +85,41 @@ void* GameConfig::GetAddress(const char *key)
 	}
 
 	if (reinterpret_cast<uint32_t>(addr) < VALID_MINIMUM_MEMORY_ADDRESS)
-		return NULL;
+		return nullptr;
 
 	return addr;
 }
 
 void* GameConfig::GetMemSig(const char *key)
 {
-	if (!this->kv) return NULL;
+	if (!m_pkv) return nullptr;
 
 	char buffer[512];
 	snprintf(buffer, sizeof(buffer), "%s/Signatures/%s", game, key);
-	KeyValues *pSignSubKey = this->kv->FindKey(buffer);
+	KeyValues *pSignSubKey = m_pkv->FindKey(buffer);
 	if (!pSignSubKey)
-		return NULL;
+		return nullptr;
 
 	const char *library = pSignSubKey->GetString("library");
 	const char *signature = pSignSubKey->GetString(platform);
 
 	if (!library[0] || !signature[0])
-		return NULL;
+		return nullptr;
 
 	DynLibInfo libInfo;
 	snprintf(libInfo.name, sizeof(libInfo.name), "%s%s", library, libSuffix);
 
 	if (GetLibInfo(&libInfo))
 	{
+		if (signature[0] == '@')
+			return ResolveSymbol(&libInfo, signature+1);
+
 		size_t byteCount = DecodeHexString(buffer, sizeof(buffer), signature);
-		if (byteCount >= 1)
+		if (byteCount > 0)
 			return FindPattern(&libInfo, buffer, byteCount);
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 
@@ -126,12 +127,12 @@ void* GameConfig::GetMemSig(const char *key)
 
 bool MemoryPatch::CreateFromConf(GameConfig *gameconf, const char *key)
 {
-	if (!gameconf || !gameconf->kv)
+	if (!gameconf || !gameconf->GetConfigKv())
 		return false;
 
 	char buffer[512];
 	snprintf(buffer, sizeof(buffer), "%s/MemPatches/%s/%s", game, key, platform);
-	KeyValues *pMemPatchSubKey = gameconf->kv->FindKey(buffer);
+	KeyValues *pMemPatchSubKey = gameconf->GetConfigKv()->FindKey(buffer);
 	if (!pMemPatchSubKey)
 		return false;
 
@@ -161,33 +162,36 @@ bool MemoryPatch::CreateFromConf(GameConfig *gameconf, const char *key)
 	if (sOffset[0])
 		iOffset = ResolveStrToInt(sOffset);
 
-	this->pAddress = PointerAdd(addr, iOffset);
-	this->vecPatch = ByteVectorFromString(patch);
-	this->vecVerify = ByteVectorFromString(verify);
-	this->vecPreserve = ByteVectorFromString(preserve);
+	m_pAddress = PointerAdd(addr, iOffset);
+	m_vecPatch = ByteVectorFromString(patch);
+	m_vecVerify = ByteVectorFromString(verify);
+	m_vecPreserve = ByteVectorFromString(preserve);
 
-	return this->vecPatch.size() > 0;
+	return m_vecPatch.size() > 0;
 }
 
 bool MemoryPatch::EnablePatch()
 {
 	// already patched, disregard
-	if (vecRestore.size() > 0)
+	if (m_vecRestore.size() > 0)
 		return false;
 	
-	if (!this->VerifyPatch())
+	if (!VerifyPatch())
 		return false;
 	
-	ByteVectorRead(vecRestore, (uint8_t*)pAddress, vecPatch.size());
-	SetMemAccess(pAddress, vecPatch.size(), _PAGE_EXECUTE_READWRITE);
-	ByteVectorWrite(vecPatch, (uint8_t*)pAddress);
+	ByteVectorRead(m_vecRestore, (uint8_t*)m_pAddress, m_vecPatch.size());
+	SetMemAccess(m_pAddress, m_vecPatch.size(), _PAGE_EXECUTE_READWRITE);
+	ByteVectorWrite(m_vecPatch, (uint8_t*)m_pAddress);
 
-	for (size_t i = 0; i < vecPatch.size(); i++)
+	if (m_vecPreserve.size() == 0)
+		return true;
+		
+	for (size_t i = 0; i < m_vecPatch.size(); i++)
 	{
 		uint8_t preserveBits = 0;
-		if (i < vecPreserve.size())
-			preserveBits = vecPreserve[i];
-		*((uint8_t*) pAddress + i) = (vecPatch[i] & ~preserveBits) | (vecRestore[i] & preserveBits);
+		if (i < m_vecPreserve.size())
+			preserveBits = m_vecPreserve[i];
+		*((uint8_t*) m_pAddress + i) = (m_vecPatch[i] & ~preserveBits) | (m_vecRestore[i] & preserveBits);
 	}
 
 	return true;
@@ -195,13 +199,13 @@ bool MemoryPatch::EnablePatch()
 
 bool MemoryPatch::VerifyPatch()
 {
-	if (!this->pAddress || this->vecPatch.size() == 0)
+	if (!m_pAddress || m_vecPatch.size() == 0)
 		return false;
 
-	uint8_t *addr = (uint8_t*)pAddress;
-	for (size_t i = 0; i < this->vecVerify.size(); i++)
+	uint8_t *addr = (uint8_t*)m_pAddress;
+	for (size_t i = 0; i < m_vecVerify.size(); i++)
 	{
-		if (vecVerify[i] != '*' && vecVerify[i] != addr[i])
+		if (m_vecVerify[i] != '*' && m_vecVerify[i] != addr[i])
 			return false;
 	}
 	return true;
@@ -210,15 +214,15 @@ bool MemoryPatch::VerifyPatch()
 void MemoryPatch::DisablePatch()
 {
 	// no memory to restore, fug
-	if (vecRestore.size() == 0)
+	if (m_vecRestore.size() == 0)
 		return;
-	ByteVectorWrite(vecRestore, (uint8_t*)pAddress);
-	vecRestore.clear();
+	ByteVectorWrite(m_vecRestore, (uint8_t*)m_pAddress);
+	m_vecRestore.clear();
 }
 
 MemoryPatch::~MemoryPatch()
 {
-	this->DisablePatch();
+	DisablePatch();
 }
 
 // ---------------------------------------------
@@ -231,7 +235,7 @@ int LibIterCallback(dl_phdr_info *iter, size_t size, void *vdata)
 	DynLibInfo *libInfo = (DynLibInfo*)vdata;
 	if (strstr(iter->dlpi_name, libInfo->name) && !strstr(iter->dlpi_name, "metamod"))
 	{
-		//libInfo->fullname = iter->dlpi_name;
+		libInfo->fullname = iter->dlpi_name;
 		libInfo->baseAddr = (void*)iter->dlpi_addr;
 		libInfo->size = iter->dlpi_phnum > 0 ? iter->dlpi_phdr[0].p_filesz : 0; // Is the first program header enough?
 		return 1;
@@ -272,7 +276,6 @@ bool GetLibInfo(DynLibInfo *libInfo)
 	
 }
 
-// https://github.com/alliedmodders/sourcemod/blob/master/core/logic/stringutil.cpp#L273
 size_t DecodeHexString(char *buffer, size_t maxlength, const char *hexstr)
 {
 	size_t written = 0;
@@ -305,7 +308,71 @@ size_t DecodeHexString(char *buffer, size_t maxlength, const char *hexstr)
 	return written;
 }
 
-void* FindPattern(DynLibInfo *libInfo, const char *pattern, size_t len)
+void* ResolveSymbol(const DynLibInfo *libInfo, const char *symbol)
+{
+#ifdef _WIN32
+	return nullptr;
+#else
+
+	void *result = nullptr;
+
+	struct stat fileStat;
+	int fd = open(libInfo->fullname, O_RDONLY);
+	if (fd == -1 || fstat(fd, &fileStat) == -1)
+	{
+		close(fd);
+		return nullptr;
+	}
+
+	Elf32_Ehdr *pFileHeader = (Elf32_Ehdr*)mmap(nullptr, fileStat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	close(fd);
+
+	if (pFileHeader == MAP_FAILED)
+		return nullptr;
+
+	if (pFileHeader->e_shoff == 0)
+	{
+		munmap(pFileHeader, fileStat.st_size);
+		return nullptr;
+	}
+
+	Elf32_Shdr *pSectionHeader = (Elf32_Shdr*)((char*)pFileHeader + pFileHeader->e_shoff);
+	for (Elf32_Half i = 0, sectionCount = pFileHeader->e_shnum; i < sectionCount; i++)
+	{
+		if (pSectionHeader[i].sh_type != SHT_SYMTAB)
+			continue;
+
+		Elf32_Sym *pSymTab = (Elf32_Sym*)((char*)pFileHeader + pSectionHeader[i].sh_offset);
+		Elf32_Word symCount = pSectionHeader[i].sh_size / sizeof(Elf32_Sym);
+		Elf32_Word strTabIndex = pSectionHeader[i].sh_link;	// Always link to SHT_STRTAB?
+		const char *pStrTab = (char*)pFileHeader + pSectionHeader[strTabIndex].sh_offset;
+		unsigned char symType;
+		Elf32_Word symNameIndex;
+
+		for (Elf32_Word j = 0; j < symCount; j++)
+		{
+			symType = ELF32_ST_TYPE(pSymTab[j].st_info);
+			if (pSymTab[j].st_shndx == SHN_UNDEF || (symType != STT_FUNC && symType != STT_OBJECT))
+				continue;
+
+			symNameIndex = pSymTab[j].st_name;
+			//if (strcmp(symbol, &pStrTab[symNameIndex]) == 0)
+			if (strcmp(symbol, pStrTab + symNameIndex) == 0)
+			{
+				result = (char*)(libInfo->baseAddr) + pSymTab[j].st_value;
+				break;
+			}
+		}
+
+		break;
+	}
+
+	munmap(pFileHeader, fileStat.st_size);
+	return result;
+#endif
+}
+
+void* FindPattern(const DynLibInfo *libInfo, const char *pattern, size_t len)
 {
 	bool found;
 	char *ptr, *end;
@@ -331,7 +398,7 @@ void* FindPattern(DynLibInfo *libInfo, const char *pattern, size_t len)
 		ptr++;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 int ResolveStrToInt(const char *str)

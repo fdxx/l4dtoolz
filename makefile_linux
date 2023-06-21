@@ -17,9 +17,10 @@ HX_FLAGS = -DPOSIX \
 	-D_vsnprintf=vsnprintf \
 	-D_alloca=alloca \
 	-Dstrcmpi=strcasecmp \
+	-DNO_HOOK_MALLOC \
+	-DNO_MALLOC_OVERRIDE \
 	-DNDEBUG \
 	-Wall \
-	-Werror \
 	-Wno-implicit-int-float-conversion \
 	-Wno-overloaded-virtual \
 	-Wno-deprecated-register \
@@ -33,21 +34,23 @@ HX_FLAGS = -DPOSIX \
 	-fno-exceptions \
 	-fno-rtti \
 	-m32 \
+	-std=c++14 \
+	-g3 \
 	-O3
 	
 HX_LIB = build/l4dtoolz.o \
 	build/memoryutils.o \
 	$(HX_HL2SDK)/lib/linux/tier1_i486.a \
 	-L$(HX_HL2SDK)/lib/linux \
-	-lvstdlib_srv -ltier0_srv
+	-lvstdlib_srv -ltier0_srv -lgcc_eh
 
 all:
 	mkdir -p build
 	mkdir -p release/addons/l4dtoolz
 
-	clang $(HX_INCLUDE) $(HX_FLAGS) -o build/l4dtoolz.o -c l4dtoolz.cpp
-	clang $(HX_INCLUDE) $(HX_FLAGS) -o build/memoryutils.o -c memoryutils.cpp
-	clang $(HX_LIB) -m32 -shared -static-libgcc -ldl -lm -o build/l4dtoolz.so
+	clang++ $(HX_INCLUDE) $(HX_FLAGS) -o build/l4dtoolz.o -c l4dtoolz.cpp
+	clang++ $(HX_INCLUDE) $(HX_FLAGS) -o build/memoryutils.o -c memoryutils.cpp
+	clang++ $(HX_LIB) -m32 -shared -o build/l4dtoolz.so
 
 	cp l4dtoolz.txt build/l4dtoolz.so release/addons/l4dtoolz
 	cp l4dtoolz.vdf release/addons

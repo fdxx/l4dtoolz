@@ -1,4 +1,3 @@
-// https://github.com/alliedmodders/sourcemod/blob/master/core/sm_convar.h
 #define private public
 #include "tier1/convar.h"
 #undef private
@@ -19,14 +18,13 @@ static MemoryPatch *g_memPatch[MAX_MEMPATCH];
 static float g_fTickInterval;
 static uint64_t *g_pReservationCookie;
 
-// https://github.com/accelerator74/Tickrate-Enabler/blob/master/boomervomitpatch.cpp
 struct fakeGlobals
 {
 	float padding[4];
 	float frametime;
 };
 
-fakeGlobals g_FakeGlobals = { {0.0, 0.0, 0.0, 0.0}, 0.033333333};
+fakeGlobals g_FakeGlobals = { {0.0f, 0.0f, 0.0f, 0.0f}, 0.03333333f};
 fakeGlobals *gp_FakeGlobals = &g_FakeGlobals;
 
 
@@ -40,7 +38,7 @@ static void SetCvarBound(ICvar *icvar, const char *name, bool bHasBound)
 
 bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
 {
-	IFileSystem *filesystem = (IFileSystem *)interfaceFactory(FILESYSTEM_INTERFACE_VERSION, NULL);
+	IFileSystem *filesystem = (IFileSystem *)interfaceFactory(FILESYSTEM_INTERFACE_VERSION, nullptr);
 	if (!filesystem)
 	{
 		Warning("Failed to get filesystem\n");
@@ -48,11 +46,10 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	}
 
 	const char *buffer = "addons/l4dtoolz/l4dtoolz.txt";
-	GameConfig *gameconf = new GameConfig();
-	if (!gameconf->LoadFile(filesystem, buffer))
+	GameConfig gameconf;
+	if (!gameconf.LoadFile(filesystem, buffer))
 	{
 		Warning("Failed to LoadFile %s\n", buffer);
-		delete gameconf;
 		return false;
 	}
 
@@ -61,9 +58,9 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	// SV_InitGameDLL -> CGameServer::InitMaxClients -> CServerGameClients::GetPlayerLimits -> CGameServer::SetMaxClients
 	buffer = "CServerGameClients::GetPlayerLimits";
 	g_memPatch[0] = new MemoryPatch();
-	if (!g_memPatch[0]->CreateFromConf(gameconf, buffer) || !g_memPatch[0]->EnablePatch())
+	if (!g_memPatch[0]->CreateFromConf(&gameconf, buffer) || !g_memPatch[0]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
 
@@ -71,17 +68,17 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	if (CommandLine()->CheckParm("-maxplayers", &buffer) || CommandLine()->CheckParm("+maxplayers", &buffer))
 		maxplayers = clamp(atoi(buffer), 1, 32);
 
-	WriteAddress<int>(g_memPatch[0]->pAddress, 2, maxplayers, false); // minplayers
-	WriteAddress<int>(g_memPatch[0]->pAddress, 8, maxplayers, false); // maxplayers
+	WriteAddress<int>(g_memPatch[0]->GetAddress(), 2, maxplayers, false); // minplayers
+	WriteAddress<int>(g_memPatch[0]->GetAddress(), 8, maxplayers, false); // maxplayers
 
 
 	// Since m_numGameSlots is dynamically modified in the CBaseServer::ReplyReservationRequest function: m_numGameSlots = pKV->GetInt( "members/numSlots", 0 )
 	// Patch the CBaseServer::ConnectClient to always use our value.
 	buffer = "CBaseServer::ConnectClient::m_numGameSlots";
 	g_memPatch[1] = new MemoryPatch();
-	if (!g_memPatch[1]->CreateFromConf(gameconf, buffer) || !g_memPatch[1]->VerifyPatch())
+	if (!g_memPatch[1]->CreateFromConf(&gameconf, buffer) || !g_memPatch[1]->VerifyPatch())
 	{
-		Warning("Failed to VerifyPatch %s\n", buffer);
+		Warning("Failed to create or verify patch: %s\n", buffer);
 		return false;
 	}
 
@@ -89,28 +86,27 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	// return CTerrorGameRules::HasPlayerControlledZombies(v1) == 0 ? 4 : 8;
 	buffer = "CTerrorGameRules::GetMaxHumanPlayers";
 	g_memPatch[2] = new MemoryPatch();
-	if (!g_memPatch[2]->CreateFromConf(gameconf, buffer) || !g_memPatch[2]->VerifyPatch())
+	if (!g_memPatch[2]->CreateFromConf(&gameconf, buffer) || !g_memPatch[2]->VerifyPatch())
 	{
-		Warning("Failed to VerifyPatch %s\n", buffer);
+		Warning("Failed to create or verify patch: %s\n", buffer);
 		return false;
 	}
 
 	// CMatchNetworkMsgControllerBase::GetActiveServerGameDetails -> CMatchTitle::GetTotalNumPlayersSupported() -> return 8;
 	buffer = "CMatchTitle::GetTotalNumPlayersSupported";
 	g_memPatch[3] = new MemoryPatch();
-	if (!g_memPatch[3]->CreateFromConf(gameconf, buffer) || !g_memPatch[3]->VerifyPatch())
+	if (!g_memPatch[3]->CreateFromConf(&gameconf, buffer) || !g_memPatch[3]->VerifyPatch())
 	{
-		Warning("Failed to VerifyPatch %s\n", buffer);
+		Warning("Failed to create or verify patch: %s\n", buffer);
 		return false;
 	}
 
 
 	buffer = "CBaseServer::m_nReservationCookie";
-	g_pReservationCookie = (uint64_t*)gameconf->GetAddress(buffer);
+	g_pReservationCookie = (uint64_t*)gameconf.GetAddress(buffer);
 	if (!g_pReservationCookie)
 	{
 		Warning("Failed to GetAddress %s\n", buffer);
-		delete gameconf;
 		return false;
 	}
 
@@ -137,47 +133,47 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	//	}
 	buffer = "CServerGameDLL::GetTickInterval";
 	g_memPatch[4] = new MemoryPatch();
-	if (!g_memPatch[4]->CreateFromConf(gameconf, buffer) || !g_memPatch[4]->EnablePatch())
+	if (!g_memPatch[4]->CreateFromConf(&gameconf, buffer) || !g_memPatch[4]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
 
 	int tickrate = 30;
 	if (CommandLine()->CheckParm("-tickrate", &buffer) || CommandLine()->CheckParm("+tickrate", &buffer))
 		tickrate = clamp(atoi(buffer), 30, 128);
-	g_fTickInterval = 1.0 / tickrate;
+	g_fTickInterval = 1.0f / tickrate;
 
-	WriteAddress<float>(g_memPatch[4]->pAddress, 0, g_fTickInterval, false);
+	WriteAddress<float>(g_memPatch[4]->GetAddress(), 0, g_fTickInterval, false);
 
 	// Fix boomer Vomit
 	buffer = "CVomit::UpdateAbility::patch1";
 	g_memPatch[5] = new MemoryPatch();
-	if (!g_memPatch[5]->CreateFromConf(gameconf, buffer) || !g_memPatch[5]->EnablePatch())
+	if (!g_memPatch[5]->CreateFromConf(&gameconf, buffer) || !g_memPatch[5]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
-	WriteAddress<uint32_t>(g_memPatch[5]->pAddress, 1, (uint32_t)&gp_FakeGlobals, false);
+	WriteAddress<uint32_t>(g_memPatch[5]->GetAddress(), 1, (uint32_t)&gp_FakeGlobals, false);
 
 	buffer = "CVomit::UpdateAbility::patch2";
 	g_memPatch[6] = new MemoryPatch();
-	if (!g_memPatch[6]->CreateFromConf(gameconf, buffer) || !g_memPatch[6]->EnablePatch())
+	if (!g_memPatch[6]->CreateFromConf(&gameconf, buffer) || !g_memPatch[6]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
-	WriteAddress<uint32_t>(g_memPatch[6]->pAddress, 1, (uint32_t)&gp_FakeGlobals, false);
+	WriteAddress<uint32_t>(g_memPatch[6]->GetAddress(), 1, (uint32_t)&gp_FakeGlobals, false);
 
 #ifdef _WIN32
 	buffer = "CVomit::UpdateAbility::patch3";
 	g_memPatch[7] = new MemoryPatch();
-	if (!g_memPatch[7]->CreateFromConf(gameconf, buffer) || !g_memPatch[7]->EnablePatch())
+	if (!g_memPatch[7]->CreateFromConf(&gameconf, buffer) || !g_memPatch[7]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
-	WriteAddress<uint32_t>(g_memPatch[7]->pAddress, 1, (uint32_t)&gp_FakeGlobals, false);
+	WriteAddress<uint32_t>(g_memPatch[7]->GetAddress(), 1, (uint32_t)&gp_FakeGlobals, false);
 
 
 	// Linux: CGameClient::SetRate -> ClampClientRate -> CBaseClient::SetRate -> CNetChan::SetDataRate
@@ -187,9 +183,9 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	// Skip if ( v2 > 30000 )
 	buffer = "CGameClient::SetRate";
 	g_memPatch[8] = new MemoryPatch();
-	if (!g_memPatch[8]->CreateFromConf(gameconf, buffer) || !g_memPatch[8]->EnablePatch())
+	if (!g_memPatch[8]->CreateFromConf(&gameconf, buffer) || !g_memPatch[8]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
 #endif
@@ -199,9 +195,9 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	// windows: Skip if ( result > 30000 )
 	buffer = "ClampClientRate";
 	g_memPatch[9] = new MemoryPatch();
-	if (!g_memPatch[9]->CreateFromConf(gameconf, buffer) || !g_memPatch[9]->EnablePatch())
+	if (!g_memPatch[9]->CreateFromConf(&gameconf, buffer) || !g_memPatch[9]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
 
@@ -209,19 +205,18 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	// windows: Skip if ( a2 > 30000.0 )
 	buffer = "CNetChan::SetDataRate";
 	g_memPatch[10] = new MemoryPatch();
-	if (!g_memPatch[10]->CreateFromConf(gameconf, buffer) || !g_memPatch[10]->EnablePatch())
+	if (!g_memPatch[10]->CreateFromConf(&gameconf, buffer) || !g_memPatch[10]->EnablePatch())
 	{
-		Warning("Failed to EnablePatch %s\n", buffer);
+		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
 	}
 
 	// In order to set the value over the boundary directly in server.cfg.
-	ICvar *icvar = (ICvar *)interfaceFactory(CVAR_INTERFACE_VERSION, NULL);
+	ICvar *icvar = (ICvar *)interfaceFactory(CVAR_INTERFACE_VERSION, nullptr);
 	SetCvarBound(icvar, "sv_minrate", false);
 	SetCvarBound(icvar, "sv_maxrate", false);
 	SetCvarBound(icvar, "net_splitpacket_maxrate", false);
 
-	delete gameconf;
 	return true;
 }
 
@@ -241,9 +236,9 @@ static void OnChangeMaxHumanPlayers( IConVar *var, const char *pOldValue, float 
 		g_memPatch[1]->EnablePatch(); // CBaseServer::ConnectClient::m_numGameSlots
 		g_memPatch[2]->EnablePatch(); // CTerrorGameRules::GetMaxHumanPlayers
 		g_memPatch[3]->EnablePatch(); // CMatchTitle::GetTotalNumPlayersSupported
-		WriteAddress<uint32_t>(g_memPatch[1]->pAddress, 2, (uint32_t)&g_iMaxHumanPlayers, false);
-		WriteAddress<uint32_t>(g_memPatch[2]->pAddress, 1, (uint32_t)&g_iMaxHumanPlayers, false);
-		WriteAddress<uint32_t>(g_memPatch[3]->pAddress, 1, (uint32_t)&g_iMaxHumanPlayers, false);
+		WriteAddress<uint32_t>(g_memPatch[1]->GetAddress(), 2, (uint32_t)&g_iMaxHumanPlayers, false);
+		WriteAddress<uint32_t>(g_memPatch[2]->GetAddress(), 1, (uint32_t)&g_iMaxHumanPlayers, false);
+		WriteAddress<uint32_t>(g_memPatch[3]->GetAddress(), 1, (uint32_t)&g_iMaxHumanPlayers, false);
 	}
 }
 static ConVar g_cvMaxHumanPlayer("sv_maxplayers", "-1", 0, "Max Human Players", true, -1, true, 32, OnChangeMaxHumanPlayers);
