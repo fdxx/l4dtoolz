@@ -10,7 +10,7 @@ public:
 	virtual void Unload();
 	virtual void Pause() {}
 	virtual void UnPause() {}
-	virtual const char *GetPluginDescription() { return "l4dtoolz v0.3 https://github.com/fdxx/l4dtoolz"; }     
+	virtual const char *GetPluginDescription() { return "l4dtoolz v0.4 https://github.com/fdxx/l4dtoolz"; }     
 	virtual void LevelInit( char const *pMapName ) {}
 	virtual void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax ) {}
 	virtual void GameFrame( bool simulating ) {}
