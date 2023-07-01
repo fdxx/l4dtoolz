@@ -39,6 +39,12 @@ cd l4dtoolz
 nmake -f makefile_windows all
 ## Check the l4dtoolz/release folder.
 ```
+
+## Related plugins (used together with this plugin)
+- [l4d2_tick_network_tweaks](https://github.com/fdxx/l4d2_plugins/blob/main/l4d2_tick_network_tweaks.sp) : Tweaks server related network parameters to cooperate high tickrate.
+- [l4d2_lobby_match_manager](https://github.com/fdxx/l4d2_plugins/blob/main/l4d2_lobby_match_manager.sp) : Auto unreserve when lobby full. and other lobby reservation related modifications.
+
+
 ## Credits
 
 - Original `l4dtoolz` plugin and other forked versions
