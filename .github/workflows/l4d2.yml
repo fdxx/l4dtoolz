@@ -25,14 +25,14 @@ jobs:
           sudo apt-get install -y clang g++-multilib make
           
       - name: Getting hl2sdk-l4d2
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: alliedmodders/hl2sdk
           ref: l4d2
           path: hl2sdk-l4d2
 
       - name: Getting own repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: src
           
@@ -42,7 +42,7 @@ jobs:
         run: make -f makefile_linux all
           
       - name: Uploading package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-l4d2-linux-${{ env.GITHUB_SHA_SHORT }}
           path: src/release
@@ -58,14 +58,14 @@ jobs:
           echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Getting hl2sdk-l4d2
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: alliedmodders/hl2sdk
           ref: l4d2
           path: hl2sdk-l4d2
 
       - name: Getting own repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: src
       
@@ -79,7 +79,7 @@ jobs:
         run: nmake -f makefile_windows all
           
       - name: Uploading package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-l4d2-windows-${{ env.GITHUB_SHA_SHORT }}
           path: src/release
