@@ -73,20 +73,20 @@ void ByteVectorRead(ByteVector &vec, uint8_t *mem, size_t count);
 void ByteVectorWrite(ByteVector &vec, uint8_t *mem);
 bool SetMemAccess(void *addr, size_t len, int prot);
 
-static inline void* PointerAdd(void *ptr, int offset)
+inline void* PointerAdd(void *ptr, int offset)
 {
 	return reinterpret_cast<char*>(ptr) + offset;
 }
 
 template<typename T>
-static T ReadAddress(void *addr, int offset)
+inline T ReadAddress(void *addr, int offset)
 {
 	void *ptr = PointerAdd(addr, offset);
 	return *reinterpret_cast<T*>(ptr);
 }
 
 template<typename T>
-static void WriteAddress(void *addr, int offset, T data, bool updateMemAccess = true)
+inline void WriteAddress(void *addr, int offset, T data, bool updateMemAccess = true)
 {
 	void *ptr = PointerAdd(addr, offset);
 	if (updateMemAccess)
