@@ -110,13 +110,12 @@ void *GameData::GetMemSig(const char *key)
 	if (!library[0] || !signature[0])
 		return nullptr;
 
-	memutil::DynLibInfo libInfo;
+	memutil::DynLibInfo libInfo{};
+	libInfo.name = library;
 
-	// If a suffix is ​​specified, do not append m_libSuffix
-	if (strstr(library, ".dll") || strstr(library, ".so"))
-		snprintf(libInfo.name, sizeof(libInfo.name), "%s", library);
-	else
-		snprintf(libInfo.name, sizeof(libInfo.name), "%s%s", library, m_libSuffix);
+	// If no suffix is ​​specified, m_libSuffix is ​​appended.
+	if (!strstr(library, ".dll") && !strstr(library, ".so"))
+		libInfo.name += m_libSuffix;
 
 	if (!memutil::GetLibInfo(&libInfo))
 		return nullptr;

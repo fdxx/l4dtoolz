@@ -18,10 +18,10 @@ bool GetLibInfo(DynLibInfo *libInfo)
 
 	for (bool it = Module32First(hSnap, &module); it; it = Module32Next(hSnap, &module))
 	{
-		if (!strstr(module.szExePath, libInfo->name) || strstr(module.szExePath, "metamod"))
+		if (!strstr(module.szExePath, libInfo.c_str()) || strstr(module.szExePath, "metamod"))
 			continue;
 		
-		snprintf(libInfo->pathname, sizeof(libInfo->pathname), "%s", module.szExePath);
+		libInfo->pathname = module.szExePath;
 		libInfo->baseAddr = (void*)module.modBaseAddr;
 		libInfo->size = module.modBaseSize;
 		found = true;
@@ -37,7 +37,7 @@ bool GetLibInfo(DynLibInfo *libInfo)
 				return 0;
 
 			DynLibInfo *libInfo = (DynLibInfo*)data;
-			if (!strstr(dl->dlpi_name, libInfo->name) || strstr(dl->dlpi_name, "metamod"))
+			if (!strstr(dl->dlpi_name, libInfo->name.c_str()) || strstr(dl->dlpi_name, "metamod"))
 				return 0;
 
 			for (ElfW(Half) i = 0; i < dl->dlpi_phnum; i++)
@@ -45,8 +45,8 @@ bool GetLibInfo(DynLibInfo *libInfo)
 				const ElfW(Phdr) &phdr = dl->dlpi_phdr[i];
 				if (phdr.p_type != PT_LOAD || phdr.p_flags != (PF_X|PF_R))
 					continue;
-				
-				snprintf(libInfo->pathname, sizeof(libInfo->pathname), "%s", dl->dlpi_name);
+
+				libInfo->pathname = dl->dlpi_name;
 				libInfo->baseAddr = (void*)dl->dlpi_addr;
 
 				// phdr.p_vaddr is the offset of this segment relative to the base address (dl->dlpi_addr)
@@ -98,7 +98,7 @@ void *FindAddrFromSymbol(const DynLibInfo *libInfo, const char *symbol)
 
 	uintptr_t result = 0;
 
-	int fd = open(libInfo->pathname, O_RDONLY);
+	int fd = open(libInfo->pathname.c_str(), O_RDONLY);
 	if (fd == -1)
 		return nullptr;
 

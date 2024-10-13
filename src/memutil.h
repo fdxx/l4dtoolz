@@ -2,22 +2,20 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <string>
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
 #include <TlHelp32.h>
 #include <memoryapi.h>
 #define _PAGE_EXECUTE_READWRITE (PAGE_EXECUTE_READWRITE)
-#define _PATH_MAX MAX_PATH
 #else
-#include <linux/limits.h>
 #include <sys/mman.h>
 #include <link.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #define _PAGE_EXECUTE_READWRITE (PROT_READ|PROT_WRITE|PROT_EXEC)
-#define _PATH_MAX PATH_MAX
 #endif
 
 // memory addresses below 0x10000 are automatically considered invalid for dereferencing
@@ -28,8 +26,8 @@ namespace memutil {
 
 struct DynLibInfo
 {
-	char name[256];
-	char pathname[_PATH_MAX];	// Full name with path.
+	std::string name;
+	std::string pathname;	// Full name with path.
 	void *baseAddr;				
 	size_t size;			
 };
