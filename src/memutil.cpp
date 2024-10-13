@@ -18,7 +18,7 @@ bool GetLibInfo(DynLibInfo *libInfo)
 
 	for (bool it = Module32First(hSnap, &module); it; it = Module32Next(hSnap, &module))
 	{
-		if (!strstr(module.szExePath, libInfo.c_str()) || strstr(module.szExePath, "metamod"))
+		if (!strstr(module.szExePath, libInfo->name.c_str()) || strstr(module.szExePath, "metamod"))
 			continue;
 		
 		libInfo->pathname = module.szExePath;
