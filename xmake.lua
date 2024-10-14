@@ -62,7 +62,7 @@ target("l4dtoolz")
 
 		add_linkdirs("$(HL2SDKPATH)/lib/linux");
 		add_links("$(HL2SDKPATH)/lib/linux/tier1_i486.a", "tier0_srv", "vstdlib_srv")
-		add_shflags("-static-libstdc++")
+		add_shflags("-static-libstdc++", "-static-libgcc")
 	end
 
     if has_config("DEBUG") then
