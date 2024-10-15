@@ -1,0 +1,72 @@
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    paths: pushbuild.txt
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019, ubuntu-latest]
+        include:
+          - os: windows-2019
+            os_short: windows
+
+          - os: ubuntu-latest
+            os_short: linux
+            container_image: debian:10
+
+    name: build on ${{ matrix.os_short }}
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container_image }}
+
+    steps:
+      - name: Getting GITHUB_SHA_SHORT
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Install linux dependencies
+        if: ${{ matrix.os_short == 'linux' }}
+        shell: bash
+        run: |
+          apt update && apt install -y apt-transport-https lsb-release wget curl software-properties-common gnupg g++-multilib git make
+          bash <(curl -fsSL https://apt.llvm.org/llvm.sh) 18
+          ln -s /usr/bin/clang-18 /usr/bin/clang
+          ln -s /usr/bin/clang++-18 /usr/bin/clang++
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+          echo "XMAKE_ROOT=y" >> $GITHUB_ENV
+
+      - name: Getting xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+          
+      - name: Getting hl2sdk-l4d2
+        uses: actions/checkout@v4
+        with:
+          repository: alliedmodders/hl2sdk
+          ref: l4d2
+          path: hl2sdk-l4d2
+
+      - name: Getting own repository
+        uses: actions/checkout@v4
+        with:
+          path: src
+
+      - name: Compile ${{ github.event.repository.name }}
+        working-directory: src
+        run: |
+          xmake f --HL2SDKPATH=../hl2sdk-l4d2
+          xmake -rv l4dtoolz
+
+      - name: Uploading package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-${{ matrix.os_short }}-${{ env.GITHUB_SHA_SHORT }}
+          path: src/release
+ 

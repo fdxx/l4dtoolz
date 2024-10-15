@@ -1,2 +1,10 @@
-.vscode/
-release/
+/.cache
+/.xmake
+/build
+/compile_commands.json
+/release
+hl2sdk*
+.vscode
+test.*
+test
+core
