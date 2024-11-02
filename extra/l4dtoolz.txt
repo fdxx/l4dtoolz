@@ -238,6 +238,45 @@
 					"patch"		"\xEB"
 				}
 			}
+
+			"CGameClient::SetUpdateRate"
+			{
+				"linux"
+				{
+					"signature" "CGameClient::SetUpdateRate"
+					"offset"	"41h"
+					"verify"	"\x7F"
+					"patch"		"\x90\x90"
+				}
+
+				"windows"
+				{
+					"signature" "CGameClient::SetUpdateRate"
+					"offset"	"3Fh"
+					"verify"	"\x7E"
+					"patch"		"\xEB"
+				}
+			}
+
+			"CBaseClient::SetUpdateRate"
+			{
+				"linux"
+				{
+					"signature" "CBaseClient::SetUpdateRate"
+					"offset"	"20h"
+					"verify"	"\x0F\x4E\xD0"
+					"patch"		"\x89\xC2\x90"
+				}
+
+				"windows"
+				{
+					"signature" "CBaseClient::SetUpdateRate"
+					"offset"	"9h"
+					"verify"	"\x7E"
+					"patch"		"\xEB"
+				}
+			}
+			
 		}
 
 		"Signatures"
@@ -309,6 +348,20 @@
 				"library"	"engine"
 				"linux"		"@_ZN8CNetChan11SetDataRateEf"
 				"windows"	"\x55\x8B\xEC\xF3\x0F\x10\x45\x08\xF3\x0F\x10\x0D\x2A\x2A\x2A\x2A\x0F\x2F\xC1\x76\x2A\x0F\x28\xC1"
+			}
+
+			"CGameClient::SetUpdateRate"
+			{
+				"library"	"engine"
+				"linux"		"@_ZN11CGameClient13SetUpdateRateEib"
+				"windows"	"\x55\x8B\xEC\x53\x8B\x5D\x0C\x84\xDB\x75\x2A\xA1"
+			}
+
+			"CBaseClient::SetUpdateRate"
+			{
+				"library"	"engine"
+				"linux"		"@_ZN11CBaseClient13SetUpdateRateEib"
+				"windows"	"\x55\x8B\xEC\x8B\x45\x08\x83\xF8\x2A\x7E\x2A\xB8\x2A\x2A\x2A\x2A\xEB"
 			}
 		}
 	}
