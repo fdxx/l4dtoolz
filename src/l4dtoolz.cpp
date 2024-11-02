@@ -247,6 +247,8 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 		return false;
 	}
 
+	// Patch hardcoded limit of UpdateRate 100 on server side.
+
 	buffer = "CGameClient::SetUpdateRate";
 	g_memPatch[11] = new MemoryPatch(&gamedata);
 	if (!g_memPatch[11]->CreatePatch(buffer) || !g_memPatch[11]->EnablePatch())
@@ -255,6 +257,13 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 		return false;
 	}
 
+	
+	/*
+	// linux: 
+	0F 4E D0  cmovle edx, eax ; Conditional move, if less than or equal.
+	->
+	89 C2 90  mov edx, eax ; Unconditional move.
+	*/
 	buffer = "CBaseClient::SetUpdateRate";
 	g_memPatch[12] = new MemoryPatch(&gamedata);
 	if (!g_memPatch[12]->CreatePatch(buffer) || !g_memPatch[12]->EnablePatch())
