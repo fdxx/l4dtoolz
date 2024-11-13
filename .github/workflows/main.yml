@@ -10,9 +10,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-2022, ubuntu-latest]
         include:
-          - os: windows-latest
+          - os: windows-2022
             os_short: windows
 
           - os: ubuntu-latest
