@@ -10,7 +10,7 @@
 
 #define GAMENAME "left4dead2"
 #define GAMEDATA_FILE "addons/l4dtoolz/l4dtoolz.txt"
-#define MAX_MEMPATCH 11
+#define MAX_MEMPATCH 13
 
 l4dtoolz g_l4dtoolz;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(l4dtoolz, IServerPluginCallbacks, INTERFACEVERSION_ISERVERPLUGINCALLBACKS, g_l4dtoolz );
@@ -150,7 +150,7 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 
 	int tickrate = 30;
 	if (CommandLine()->CheckParm("-tickrate", &buffer) || CommandLine()->CheckParm("+tickrate", &buffer))
-		tickrate = clamp(atoi(buffer), 30, 128);
+		tickrate = clamp(atoi(buffer), 30, 200);
 	g_fTickInterval = 1.0f / tickrate;
 
 	memutil::WriteAddress<float>(g_memPatch[4]->GetAddress(), 0, g_fTickInterval, false);
@@ -242,6 +242,31 @@ bool l4dtoolz::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 	buffer = "CNetChan::SetDataRate";
 	g_memPatch[10] = new MemoryPatch(&gamedata);
 	if (!g_memPatch[10]->CreatePatch(buffer) || !g_memPatch[10]->EnablePatch())
+	{
+		Warning("Failed to create or enable patch: %s\n", buffer);
+		return false;
+	}
+
+	// Patch hardcoded limit of UpdateRate 100 on server side.
+
+	buffer = "CGameClient::SetUpdateRate";
+	g_memPatch[11] = new MemoryPatch(&gamedata);
+	if (!g_memPatch[11]->CreatePatch(buffer) || !g_memPatch[11]->EnablePatch())
+	{
+		Warning("Failed to create or enable patch: %s\n", buffer);
+		return false;
+	}
+
+	
+	/*
+	// linux: 
+	0F 4E D0  cmovle edx, eax ; Conditional move, if less than or equal.
+	->
+	89 C2 90  mov edx, eax ; Unconditional move.
+	*/
+	buffer = "CBaseClient::SetUpdateRate";
+	g_memPatch[12] = new MemoryPatch(&gamedata);
+	if (!g_memPatch[12]->CreatePatch(buffer) || !g_memPatch[12]->EnablePatch())
 	{
 		Warning("Failed to create or enable patch: %s\n", buffer);
 		return false;
