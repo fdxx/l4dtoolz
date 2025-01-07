@@ -10,7 +10,7 @@ public:
 	void Unload();
 	void Pause() {}
 	void UnPause() {}
-	const char *GetPluginDescription() { return "l4dtoolz v0.5.1 https://github.com/fdxx/l4dtoolz"; }     
+	const char *GetPluginDescription() { return "l4dtoolz v0.5.2 https://github.com/fdxx/l4dtoolz"; }     
 	void LevelInit( char const *pMapName ) {}
 	void ServerActivate( edict_t *pEdictList, int edictCount, int clientMax ) {}
 	void GameFrame( bool simulating ) {}

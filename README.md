@@ -10,17 +10,24 @@ Valve server plugin, unlock the max players limit and tickrate limit on L4D2. Ma
 
 ```bash
 ## Debian as an example.
-apt update && apt install -y clang g++-multilib wget git make
+apt update && apt install -y apt-transport-https lsb-release wget curl software-properties-common gnupg g++-multilib git make
+bash <(curl -fsSL https://apt.llvm.org/llvm.sh) 18
 
-export CC=clang && export CXX=clang++
+echo 'export PATH=/usr/lib/llvm-18/bin:$PATH' >> /etc/profile
+echo 'export CC=clang' >> /etc/profile
+echo 'export CXX=clang++' >> /etc/profile
+echo 'export XMAKE_ROOT=y' >> /etc/profile
+source /etc/profile
+
 wget https://xmake.io/shget.text -O - | bash
+source ~/.xmake/profile
 
 mkdir temp && cd temp
-git clone --depth=1 -b l4d2 --recurse-submodules https://github.com/alliedmodders/hl2sdk hl2sdk-l4d2
+git clone --depth=1 -b l4d2 https://github.com/alliedmodders/hl2sdk hl2sdk-l4d2
 git clone --depth=1 https://github.com/fdxx/l4dtoolz
 
 cd l4dtoolz
-xmake f --HL2SDKPATH=../hl2sdk-l4d2
+xmake f -c --HL2SDKPATH=../hl2sdk-l4d2
 xmake -rv l4dtoolz
 
 ## Check the l4dtoolz/release folder.
