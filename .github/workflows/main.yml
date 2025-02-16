@@ -2,17 +2,21 @@ name: build
 
 on:
   workflow_dispatch:
+  pull_request:
   push:
-    paths: pushbuild.txt
+    branches:
+      - main
+    paths:
+      - pushbuild.txt
 
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-latest]
+        os: [windows-2019, ubuntu-latest]
         include:
-          - os: windows-2022
+          - os: windows-2019
             os_short: windows
 
           - os: ubuntu-latest
@@ -35,8 +39,7 @@ jobs:
         run: |
           apt update && apt install -y apt-transport-https lsb-release wget curl software-properties-common gnupg g++-multilib git make
           bash <(curl -fsSL https://apt.llvm.org/llvm.sh) 18
-          ln -s /usr/bin/clang-18 /usr/bin/clang
-          ln -s /usr/bin/clang++-18 /usr/bin/clang++
+          echo "/usr/lib/llvm-18/bin" >> $GITHUB_PATH
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
           echo "XMAKE_ROOT=y" >> $GITHUB_ENV
@@ -61,7 +64,7 @@ jobs:
       - name: Compile ${{ github.event.repository.name }}
         working-directory: src
         run: |
-          xmake f --HL2SDKPATH=../hl2sdk-l4d2
+          xmake f -c --HL2SDKPATH=../hl2sdk-l4d2
           xmake -rv l4dtoolz
 
       - name: Uploading package
